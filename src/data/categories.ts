@@ -1,0 +1,58 @@
+import type { Category } from '@/types';
+
+export const mockCategories: Category[] = [
+  {
+    id: 'category-001',
+    name: 'Smartphones',
+    description: 'Latest smartphones and mobile technology.',
+    image: 'https://placehold.co/600x400?text=Smartphones',
+    status: 'active',
+    createdAt: '2026-01-01T10:00:00.000Z',
+    updatedAt: '2026-01-01T10:00:00.000Z',
+  },
+  {
+    id: 'category-002',
+    name: 'Laptops',
+    description: 'Powerful laptops for work, study, and entertainment.',
+    image: 'https://placehold.co/600x400?text=Laptops',
+    status: 'active',
+    createdAt: '2026-01-02T10:00:00.000Z',
+    updatedAt: '2026-01-02T10:00:00.000Z',
+  },
+  {
+    id: 'category-003',
+    name: 'Audio',
+    description: 'Headphones, earbuds, and speakers.',
+    image: 'https://placehold.co/600x400?text=Audio',
+    status: 'active',
+    createdAt: '2026-01-03T10:00:00.000Z',
+    updatedAt: '2026-01-03T10:00:00.000Z',
+  },
+  {
+    id: 'category-004',
+    name: 'Wearables',
+    description: 'Smartwatches and fitness-focused wearable devices.',
+    image: 'https://placehold.co/600x400?text=Wearables',
+    status: 'active',
+    createdAt: '2026-01-04T10:00:00.000Z',
+    updatedAt: '2026-01-04T10:00:00.000Z',
+  },
+  {
+    id: 'category-005',
+    name: 'Accessories',
+    description: 'Essential technology accessories and peripherals.',
+    image: 'https://placehold.co/600x400?text=Accessories',
+    status: 'active',
+    createdAt: '2026-01-05T10:00:00.000Z',
+    updatedAt: '2026-01-05T10:00:00.000Z',
+  },
+  {
+    id: 'category-006',
+    name: 'Monitors',
+    description: 'Displays for productivity, gaming, and creative work.',
+    image: 'https://placehold.co/600x400?text=Monitors',
+    status: 'active',
+    createdAt: '2026-01-06T10:00:00.000Z',
+    updatedAt: '2026-01-06T10:00:00.000Z',
+  },
+];
