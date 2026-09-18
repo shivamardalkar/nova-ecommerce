@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+import { STORAGE_KEYS, storageService } from '@/services/storage';
 import type { CartItem, Product } from '@/types';
 
 interface CartState {
@@ -7,10 +8,26 @@ interface CartState {
     appliedCouponCode: string | null;
 }
 
-const initialState: CartState = {
-    items: [],
-    appliedCouponCode: null,
+const getInitialCartState = (): CartState => {
+    const storedCart = storageService.getItem<CartState | null>(
+        STORAGE_KEYS.CART,
+        null,
+    );
+
+    return {
+        items: storedCart?.items ?? [],
+        appliedCouponCode: storedCart?.appliedCouponCode ?? null,
+    };
 };
+
+const persistCart = (state: CartState) => {
+    storageService.setItem(STORAGE_KEYS.CART, {
+        items: state.items,
+        appliedCouponCode: state.appliedCouponCode,
+    });
+};
+
+const initialState: CartState = getInitialCartState();
 
 const cartSlice = createSlice({
     name: 'cart',
@@ -31,19 +48,26 @@ const cartSlice = createSlice({
             );
 
             if (existingItem) {
-                existingItem.quantity += quantity;
-            } else {
+                existingItem.quantity = Math.min(
+                    existingItem.quantity + quantity,
+                    product.stock,
+                );
+            } else if (product.stock > 0) {
                 state.items.push({
                     product,
-                    quantity,
+                    quantity: Math.min(quantity, product.stock),
                 });
             }
+
+            persistCart(state);
         },
 
         removeFromCart: (state, action: PayloadAction<string>) => {
             state.items = state.items.filter(
                 (item) => item.product.id !== action.payload,
             );
+
+            persistCart(state);
         },
 
         increaseQuantity: (state, action: PayloadAction<string>) => {
@@ -51,9 +75,11 @@ const cartSlice = createSlice({
                 (cartItem) => cartItem.product.id === action.payload,
             );
 
-            if (item) {
+            if (item && item.quantity < item.product.stock) {
                 item.quantity += 1;
             }
+
+            persistCart(state);
         },
 
         decreaseQuantity: (state, action: PayloadAction<string>) => {
@@ -68,23 +94,33 @@ const cartSlice = createSlice({
             if (item.quantity > 1) {
                 item.quantity -= 1;
             }
+
+            persistCart(state);
         },
 
         clearCart: (state) => {
             state.items = [];
             state.appliedCouponCode = null;
+
+            persistCart(state);
         },
 
         applyCoupon: (state, action: PayloadAction<string>) => {
-            state.appliedCouponCode = action.payload;
+            state.appliedCouponCode = action.payload.trim().toUpperCase();
+
+            persistCart(state);
         },
 
         removeCoupon: (state) => {
             state.appliedCouponCode = null;
+
+            persistCart(state);
         },
 
         setCartItems: (state, action: PayloadAction<CartItem[]>) => {
             state.items = action.payload;
+
+            persistCart(state);
         },
     },
 });

@@ -7,6 +7,7 @@ import StorefrontLayout from '@/layouts/StorefrontLayout';
 import HomePage from '@/pages/storefront/HomePage';
 import ShopPage from '@/pages/storefront/ShopPage';
 import ProductDetailsPage from '@/pages/storefront/ProductDetailsPage';
+import CartPage from '@/pages/customer/CartPage';
 
 import AdminRoute from './AdminRoute';
 import ProtectedRoute from './ProtectedRoute';
@@ -41,7 +42,7 @@ const AppRoutes = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/wishlist" element={<PlaceholderPage title="Wishlist" />} />
 
-            <Route path="/cart" element={<PlaceholderPage title="Cart" />} />
+            <Route path="/cart" element={<CartPage />} />
 
             <Route path="/checkout" element={<PlaceholderPage title="Checkout" />} />
           </Route>
