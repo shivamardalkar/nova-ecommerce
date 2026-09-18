@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAppDispatch } from '@/store/hooks';
+import { fetchCategories } from '@/store/slices/categorySlice';
 import { fetchProducts } from '@/store/slices/productSlice';
 
 const AdminLayout = () => {
@@ -11,6 +12,7 @@ const AdminLayout = () => {
 
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchCategories());
   }, [dispatch]);
 
   return (

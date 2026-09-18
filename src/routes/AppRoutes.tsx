@@ -19,6 +19,7 @@ import ProtectedRoute from './ProtectedRoute';
 
 import AdminLayout from '@/layouts/admin/AdminLayout';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
+import AdminCategoriesPage from '@/pages/admin/AdminCategoriesPage';
 
 const PlaceholderPage = ({ title }: { title: string }) => {
   return (
@@ -69,10 +70,7 @@ const AppRoutes = () => {
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboardPage />} />
 
-            <Route
-              path="/admin/categories"
-              element={<PlaceholderPage title="Admin Categories" />}
-            />
+            <Route path="/admin/categories" element={<AdminCategoriesPage />} />
 
             <Route path="/admin/products" element={<PlaceholderPage title="Admin Products" />} />
 
