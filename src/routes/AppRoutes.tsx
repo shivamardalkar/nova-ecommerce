@@ -1,5 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from '@/pages/auth/LoginPage';
+import RegisterPage from '@/pages/auth/RegisterPage';
+
 import AdminRoute from './AdminRoute';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -25,7 +27,7 @@ const AppRoutes = () => {
 
         {/* Public authentication routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<PlaceholderPage title="Customer Registration" />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Protected customer routes */}
         <Route element={<ProtectedRoute />}>
