@@ -8,6 +8,7 @@ import HomePage from '@/pages/storefront/HomePage';
 import ShopPage from '@/pages/storefront/ShopPage';
 import ProductDetailsPage from '@/pages/storefront/ProductDetailsPage';
 import CartPage from '@/pages/customer/CartPage';
+import WishlistPage from '@/pages/customer/WishlistPage';
 
 import AdminRoute from './AdminRoute';
 import ProtectedRoute from './ProtectedRoute';
@@ -40,7 +41,7 @@ const AppRoutes = () => {
 
           {/* Protected customer routes */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/wishlist" element={<PlaceholderPage title="Wishlist" />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
 
             <Route path="/cart" element={<CartPage />} />
 
