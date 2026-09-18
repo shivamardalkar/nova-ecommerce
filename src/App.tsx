@@ -1,15 +1,17 @@
-function App() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-950 p-6 text-white">
-      <div className="text-center">
-        <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-neutral-400">NOVA</p>
+import { useEffect } from 'react';
 
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">E-Commerce Platform</h1>
+import { AppRoutes } from '@/routes';
+import { useAppDispatch } from '@/store/hooks';
+import { restoreSession } from '@/store/slices/authSlice';
 
-        <p className="mt-4 text-neutral-400">React + TypeScript + Vite + Tailwind CSS</p>
-      </div>
-    </main>
-  );
-}
+const App = () => {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(restoreSession());
+  }, [dispatch]);
+
+  return <AppRoutes />;
+};
 
 export default App;
