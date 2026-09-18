@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 
-import AppRoutes from '@/routes/AppRoutes';
+import { AppRoutes } from '@/routes';
 import { useAppDispatch } from '@/store/hooks';
 import { restoreSession } from '@/store/slices/authSlice';
 
-function App() {
+const App = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -12,6 +12,6 @@ function App() {
   }, [dispatch]);
 
   return <AppRoutes />;
-}
+};
 
 export default App;
