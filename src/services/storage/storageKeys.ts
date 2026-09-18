@@ -7,4 +7,5 @@ export const STORAGE_KEYS = {
     PRODUCTS: 'nova_products',
     CATEGORIES: 'nova_categories',
     COUPONS: 'nova_coupons',
+    USERS: 'nova_users',
 } as const;
