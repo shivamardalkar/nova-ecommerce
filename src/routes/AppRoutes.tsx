@@ -5,6 +5,8 @@ import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import StorefrontLayout from '@/layouts/StorefrontLayout';
 import HomePage from '@/pages/storefront/HomePage';
+import ShopPage from '@/pages/storefront/ShopPage';
+import ProductDetailsPage from '@/pages/storefront/ProductDetailsPage';
 
 import AdminRoute from './AdminRoute';
 import ProtectedRoute from './ProtectedRoute';
@@ -25,9 +27,9 @@ const AppRoutes = () => {
         <Route element={<StorefrontLayout />}>
           <Route path="/" element={<HomePage />} />
 
-          <Route path="/shop" element={<PlaceholderPage title="Shop" />} />
+          <Route path="/shop" element={<ShopPage />} />
 
-          <Route path="/products/:id" element={<PlaceholderPage title="Product Details" />} />
+          <Route path="/products/:id" element={<ProductDetailsPage />} />
 
           <Route path="/about" element={<PlaceholderPage title="About" />} />
 

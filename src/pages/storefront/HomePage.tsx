@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import ProductCard from '@/components/product/ProductCard';
 import { mockProducts } from '@/data/products';
-
+import { mockBrands } from '@/data/brands';
 const HomePage = () => {
   return (
     <div>
@@ -108,17 +108,15 @@ const HomePage = () => {
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
-            {['Apex', 'Vertex', 'Lumina', 'Nexora', 'Orion', 'Pulse', 'NovaTech', 'Elevate'].map(
-              (brand) => (
-                <Link
-                  key={brand}
-                  to={`/shop?brand=${encodeURIComponent(brand)}`}
-                  className="flex min-h-24 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-center font-semibold text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-900"
-                >
-                  {brand}
-                </Link>
-              ),
-            )}
+            {mockBrands.map((brand) => (
+              <Link
+                key={brand.id}
+                to={`/shop?brand=${encodeURIComponent(brand.id)}`}
+                className="flex min-h-24 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-center font-semibold text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-900"
+              >
+                {brand.name}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
