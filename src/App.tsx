@@ -1,4 +1,15 @@
+import { useEffect } from 'react';
+
+import { useAppDispatch } from '@/store/hooks';
+import { restoreSession } from '@/store/slices/authSlice';
+
 function App() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(restoreSession());
+  }, [dispatch]);
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-neutral-950 p-6 text-white">
       <div className="text-center">
