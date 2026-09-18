@@ -6,6 +6,7 @@ import type {
     LoginCredentials,
     RegisterPayload,
     User,
+    UserRole,
 } from '@/types';
 
 const createAuthSession = (user: User): AuthSession => ({
@@ -14,7 +15,10 @@ const createAuthSession = (user: User): AuthSession => ({
 });
 
 export const authService = {
-    async login(credentials: LoginCredentials): Promise<User> {
+    async login(
+        credentials: LoginCredentials,
+        expectedRole?: UserRole,
+    ): Promise<User> {
         const response = await mockApi.getUsers();
 
         const normalizedEmail = credentials.email.trim().toLowerCase();
@@ -29,12 +33,13 @@ export const authService = {
             throw new Error('Invalid email or password.');
         }
 
+        if (expectedRole && user.role !== expectedRole) {
+            throw new Error('You do not have permission to access this area.');
+        }
+
         const session = createAuthSession(user);
 
-        storageService.setItem(
-            STORAGE_KEYS.AUTH_SESSION,
-            session,
-        );
+        storageService.setItem(STORAGE_KEYS.AUTH_SESSION, session);
 
         return user;
     },
@@ -63,17 +68,11 @@ export const authService = {
 
         const updatedUsers = [...response.data, newUser];
 
-        storageService.setItem(
-            STORAGE_KEYS.USERS,
-            updatedUsers,
-        );
+        storageService.setItem(STORAGE_KEYS.USERS, updatedUsers);
 
         const session = createAuthSession(newUser);
 
-        storageService.setItem(
-            STORAGE_KEYS.AUTH_SESSION,
-            session,
-        );
+        storageService.setItem(STORAGE_KEYS.AUTH_SESSION, session);
 
         return newUser;
     },

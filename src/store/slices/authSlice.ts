@@ -30,13 +30,13 @@ const initialState: AuthState = {
 
 export const login = createAsyncThunk<
     User,
-    LoginCredentials,
+    LoginCredentials & { expectedRole?: User['role'] },
     { rejectValue: string }
 >(
     'auth/login',
-    async (credentials, { rejectWithValue }) => {
+    async ({ expectedRole, ...credentials }, { rejectWithValue }) => {
         try {
-            return await authService.login(credentials);
+            return await authService.login(credentials, expectedRole);
         } catch (error) {
             return rejectWithValue(
                 error instanceof Error

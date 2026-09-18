@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
+import AdminLoginPage from '@/pages/auth/AdminLoginPage';
 
 import AdminRoute from './AdminRoute';
 import ProtectedRoute from './ProtectedRoute';
@@ -37,7 +38,7 @@ const AppRoutes = () => {
         </Route>
 
         {/* Protected admin routes */}
-        <Route path="/admin/login" element={<PlaceholderPage title="Admin Login" />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
 
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<PlaceholderPage title="Admin Dashboard" />} />
