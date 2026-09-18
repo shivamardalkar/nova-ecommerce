@@ -265,6 +265,11 @@ export const mockApi = {
     async getUsers() {
         await delay(API_DELAY);
 
-        return createApiResponse<User[]>([...mockUsers]);
+        const users = getPersistedData<User>(
+            STORAGE_KEYS.USERS,
+            mockUsers,
+        );
+
+        return createApiResponse<User[]>(users);
     },
 };
