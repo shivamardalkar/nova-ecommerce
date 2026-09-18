@@ -9,6 +9,10 @@ import ShopPage from '@/pages/storefront/ShopPage';
 import ProductDetailsPage from '@/pages/storefront/ProductDetailsPage';
 import CartPage from '@/pages/customer/CartPage';
 import WishlistPage from '@/pages/customer/WishlistPage';
+import CheckoutPage from '@/pages/customer/CheckoutPage';
+import OrderSuccessPage from '@/pages/customer/OrderSuccessPage';
+import OrdersPage from '@/pages/customer/OrdersPage';
+import OrderDetailsPage from '@/pages/customer/OrderDetailsPage';
 
 import AdminRoute from './AdminRoute';
 import ProtectedRoute from './ProtectedRoute';
@@ -42,10 +46,10 @@ const AppRoutes = () => {
           {/* Protected customer routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/wishlist" element={<WishlistPage />} />
-
             <Route path="/cart" element={<CartPage />} />
-
-            <Route path="/checkout" element={<PlaceholderPage title="Checkout" />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:id" element={<OrderDetailsPage />} />
           </Route>
         </Route>
 
@@ -76,7 +80,7 @@ const AppRoutes = () => {
         </Route>
 
         {/* Other routes */}
-        <Route path="/order-success/:id" element={<PlaceholderPage title="Order Success" />} />
+        <Route path="/order-success/:id" element={<OrderSuccessPage />} />
 
         <Route path="/unauthorized" element={<PlaceholderPage title="Unauthorized" />} />
 
