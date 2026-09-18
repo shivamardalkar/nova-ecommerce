@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-
+import LoginPage from '@/pages/auth/LoginPage';
 import AdminRoute from './AdminRoute';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -24,7 +24,7 @@ const AppRoutes = () => {
         <Route path="/support" element={<PlaceholderPage title="Support" />} />
 
         {/* Public authentication routes */}
-        <Route path="/login" element={<PlaceholderPage title="Customer Login" />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<PlaceholderPage title="Customer Registration" />} />
 
         {/* Protected customer routes */}
