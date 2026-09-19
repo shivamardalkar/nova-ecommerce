@@ -13,6 +13,9 @@ import CheckoutPage from '@/pages/customer/CheckoutPage';
 import OrderSuccessPage from '@/pages/customer/OrderSuccessPage';
 import OrdersPage from '@/pages/customer/OrdersPage';
 import OrderDetailsPage from '@/pages/customer/OrderDetailsPage';
+import AboutPage from '@/pages/storefront/AboutPage';
+import FAQPage from '@/pages/storefront/FAQPage';
+import SupportPage from '@/pages/storefront/SupportPage';
 
 import AdminRoute from './AdminRoute';
 import ProtectedRoute from './ProtectedRoute';
@@ -45,11 +48,11 @@ const AppRoutes = () => {
 
           <Route path="/products/:id" element={<ProductDetailsPage />} />
 
-          <Route path="/about" element={<PlaceholderPage title="About" />} />
+          <Route path="/about" element={<AboutPage />} />
 
-          <Route path="/faq" element={<PlaceholderPage title="FAQ" />} />
+          <Route path="/faq" element={<FAQPage />} />
 
-          <Route path="/support" element={<PlaceholderPage title="Support" />} />
+          <Route path="/support" element={<SupportPage />} />
 
           {/* Protected customer routes */}
           <Route element={<ProtectedRoute />}>
