@@ -3,12 +3,22 @@ import { Link } from 'react-router-dom';
 import ProductCard from '@/components/product/ProductCard';
 
 import { mockBrands } from '@/data/brands';
-import { mockProducts } from '@/data/products';
+import { useEffect } from 'react';
+
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchProducts } from '@/store/slices/productSlice';
+import { selectProducts } from '@/store/selectors/productSelectors';
 
 const HomePage = () => {
-  const featuredProducts = mockProducts
-    .filter((product) => product.featured && product.status === 'active')
-    .slice(0, 4);
+  const dispatch = useAppDispatch();
+
+  const products = useAppSelector(selectProducts);
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
+
+  const featuredProducts = products.filter((product) => product.featured);
 
   return (
     <div className="bg-white">

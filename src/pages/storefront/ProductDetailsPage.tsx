@@ -1,16 +1,15 @@
-import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { mockBrands } from '@/data/brands';
-import { mockProducts } from '@/data/products';
+import { useEffect, useState } from 'react';
+
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchProducts } from '@/store/slices/productSlice';
+import { selectProducts } from '@/store/selectors/productSelectors';
 import { selectIsAuthenticated } from '@/store/selectors/authSelectors';
 import { selectIsProductInWishlist } from '@/store/selectors/wishlistSelectors';
 import { addToCart } from '@/store/slices/cartSlice';
-import {
-  addToWishlist,
-  removeFromWishlist,
-} from '@/store/slices/wishlistSlice';
+import { addToWishlist, removeFromWishlist } from '@/store/slices/wishlistSlice';
 
 const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,15 +18,16 @@ const ProductDetailsPage = () => {
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
-  const product = useMemo(
-    () => mockProducts.find((item) => item.id === id),
-    [id],
-  );
+  const products = useAppSelector(selectProducts);
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
+
+  const product = products.find((item) => item.id === id);
 
   const isInWishlist = useAppSelector((state) =>
-    product
-      ? selectIsProductInWishlist(state, product.id)
-      : false,
+    product ? selectIsProductInWishlist(state, product.id) : false,
   );
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -42,13 +42,10 @@ const ProductDetailsPage = () => {
             <span className="text-2xl">📦</span>
           </div>
 
-          <h1 className="mt-6 text-3xl font-bold text-neutral-950">
-            Product not found
-          </h1>
+          <h1 className="mt-6 text-3xl font-bold text-neutral-950">Product not found</h1>
 
           <p className="mt-3 text-sm leading-6 text-neutral-500">
-            The product you're looking for doesn't exist or is no longer
-            available.
+            The product you're looking for doesn't exist or is no longer available.
           </p>
 
           <Link
@@ -62,20 +59,15 @@ const ProductDetailsPage = () => {
     );
   }
 
-  const brand = mockBrands.find(
-    (item) => item.id === product.brandId,
-  );
+  const brand = mockBrands.find((item) => item.id === product.brandId);
 
-  const selectedImage =
-    imageError
-      ? 'https://placehold.co/800x800?text=NOVA'
-      : product.images[selectedImageIndex] ??
-        product.images[0] ??
-        'https://placehold.co/800x800?text=NOVA';
+  const selectedImage = imageError
+    ? 'https://placehold.co/800x800?text=NOVA'
+    : (product.images[selectedImageIndex] ??
+      product.images[0] ??
+      'https://placehold.co/800x800?text=NOVA');
 
-  const hasDiscount =
-    product.originalPrice > product.price &&
-    product.discountPercentage > 0;
+  const hasDiscount = product.originalPrice > product.price && product.discountPercentage > 0;
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
@@ -123,32 +115,21 @@ const ProductDetailsPage = () => {
   };
 
   const increaseQuantity = () => {
-    setQuantity((current) =>
-      Math.min(product.stock, current + 1),
-    );
+    setQuantity((current) => Math.min(product.stock, current + 1));
   };
 
   return (
     <main className="bg-white">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
         {/* Breadcrumb */}
-        <nav
-          aria-label="Breadcrumb"
-          className="mb-8 flex flex-wrap items-center gap-2 text-sm"
-        >
-          <Link
-            to="/"
-            className="text-neutral-500 transition hover:text-neutral-950"
-          >
+        <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-2 text-sm">
+          <Link to="/" className="text-neutral-500 transition hover:text-neutral-950">
             Home
           </Link>
 
           <span className="text-neutral-300">/</span>
 
-          <Link
-            to="/shop"
-            className="text-neutral-500 transition hover:text-neutral-950"
-          >
+          <Link to="/shop" className="text-neutral-500 transition hover:text-neutral-950">
             Shop
           </Link>
 
@@ -227,10 +208,7 @@ const ProductDetailsPage = () => {
               </div>
 
               <span className="text-sm text-neutral-500">
-                {product.reviews.length}{' '}
-                {product.reviews.length === 1
-                  ? 'review'
-                  : 'reviews'}
+                {product.reviews.length} {product.reviews.length === 1 ? 'review' : 'reviews'}
               </span>
             </div>
 
@@ -246,17 +224,11 @@ const ProductDetailsPage = () => {
                 {hasDiscount && (
                   <>
                     <span className="text-lg text-neutral-400 line-through">
-                      ₹
-                      {product.originalPrice.toLocaleString(
-                        'en-IN',
-                      )}
+                      ₹{product.originalPrice.toLocaleString('en-IN')}
                     </span>
 
                     <span className="text-sm font-semibold text-green-600">
-                      Save ₹
-                      {(
-                        product.originalPrice - product.price
-                      ).toLocaleString('en-IN')}
+                      Save ₹{(product.originalPrice - product.price).toLocaleString('en-IN')}
                     </span>
                   </>
                 )}
@@ -264,31 +236,23 @@ const ProductDetailsPage = () => {
             </div>
 
             {/* Description */}
-            <p className="mt-6 leading-7 text-neutral-600">
-              {product.description}
-            </p>
+            <p className="mt-6 leading-7 text-neutral-600">{product.description}</p>
 
             {/* Stock */}
             <div className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
               {product.stock > 0 ? (
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-neutral-900">
-                      In stock
-                    </p>
+                    <p className="text-sm font-semibold text-neutral-900">In stock</p>
 
-                    <p className="mt-1 text-xs text-neutral-500">
-                      {product.stock} units available
-                    </p>
+                    <p className="mt-1 text-xs text-neutral-500">{product.stock} units available</p>
                   </div>
 
                   <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm font-semibold text-red-600">
-                    Out of stock
-                  </p>
+                  <p className="text-sm font-semibold text-red-600">Out of stock</p>
 
                   <p className="mt-1 text-xs text-neutral-500">
                     This product is currently unavailable.
@@ -346,9 +310,7 @@ const ProductDetailsPage = () => {
                 disabled={product.stock === 0}
                 className="rounded-lg bg-neutral-950 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {product.stock === 0
-                  ? 'Out of Stock'
-                  : 'Add to Cart'}
+                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
               </button>
 
               <button
@@ -360,16 +322,13 @@ const ProductDetailsPage = () => {
                     : 'border-neutral-300 text-neutral-900 hover:border-neutral-950 hover:bg-neutral-50'
                 }`}
               >
-                {isInWishlist
-                  ? '♥ In Wishlist'
-                  : '♡ Add to Wishlist'}
+                {isInWishlist ? '♥ In Wishlist' : '♡ Add to Wishlist'}
               </button>
             </div>
 
             {!isAuthenticated && (
               <p className="mt-3 text-xs text-neutral-500">
-                Sign in is required to add products to your cart
-                or wishlist.
+                Sign in is required to add products to your cart or wishlist.
               </p>
             )}
           </div>
@@ -383,28 +342,24 @@ const ProductDetailsPage = () => {
                 Product Details
               </p>
 
-              <h2 className="mt-2 text-2xl font-bold text-neutral-950">
-                Specifications
-              </h2>
+              <h2 className="mt-2 text-2xl font-bold text-neutral-950">Specifications</h2>
             </div>
 
             <div className="mt-6 overflow-hidden rounded-xl border border-neutral-200">
-              {product.specifications.map(
-                (specification, index) => (
-                  <div
-                    key={`${specification.key}-${index}`}
-                    className="grid grid-cols-1 border-b border-neutral-200 last:border-b-0 sm:grid-cols-3"
-                  >
-                    <div className="bg-neutral-50 px-5 py-4 text-sm font-semibold text-neutral-800">
-                      {specification.key}
-                    </div>
-
-                    <div className="px-5 py-4 text-sm leading-6 text-neutral-600 sm:col-span-2">
-                      {specification.value}
-                    </div>
+              {product.specifications.map((specification, index) => (
+                <div
+                  key={`${specification.key}-${index}`}
+                  className="grid grid-cols-1 border-b border-neutral-200 last:border-b-0 sm:grid-cols-3"
+                >
+                  <div className="bg-neutral-50 px-5 py-4 text-sm font-semibold text-neutral-800">
+                    {specification.key}
                   </div>
-                ),
-              )}
+
+                  <div className="px-5 py-4 text-sm leading-6 text-neutral-600 sm:col-span-2">
+                    {specification.value}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         )}
@@ -417,44 +372,32 @@ const ProductDetailsPage = () => {
                 Customer Feedback
               </p>
 
-              <h2 className="mt-2 text-2xl font-bold text-neutral-950">
-                Customer Reviews
-              </h2>
+              <h2 className="mt-2 text-2xl font-bold text-neutral-950">Customer Reviews</h2>
             </div>
 
             <p className="text-sm text-neutral-500">
-              {product.reviews.length} reviews · Average{' '}
-              {product.rating.toFixed(1)}
+              {product.reviews.length} reviews · Average {product.rating.toFixed(1)}
             </p>
           </div>
 
           <div className="mt-6 space-y-4">
             {product.reviews.length > 0 ? (
               product.reviews.map((review) => (
-                <article
-                  key={review.id}
-                  className="rounded-xl border border-neutral-200 p-5"
-                >
+                <article key={review.id} className="rounded-xl border border-neutral-200 p-5">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <h3 className="font-semibold text-neutral-950">
-                      {review.userName}
-                    </h3>
+                    <h3 className="font-semibold text-neutral-950">{review.userName}</h3>
 
                     <span className="inline-flex w-fit rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-700">
                       ★ {review.rating.toFixed(1)}
                     </span>
                   </div>
 
-                  <p className="mt-3 text-sm leading-6 text-neutral-600">
-                    {review.comment}
-                  </p>
+                  <p className="mt-3 text-sm leading-6 text-neutral-600">{review.comment}</p>
                 </article>
               ))
             ) : (
               <div className="rounded-xl border border-dashed border-neutral-300 px-6 py-10 text-center">
-                <p className="text-sm text-neutral-500">
-                  No reviews available for this product.
-                </p>
+                <p className="text-sm text-neutral-500">No reviews available for this product.</p>
               </div>
             )}
           </div>

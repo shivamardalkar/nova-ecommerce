@@ -1,44 +1,51 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
 import ProductCard from '@/components/product/ProductCard';
 
 import { mockBrands } from '@/data/brands';
-import { mockCategories } from '@/data/categories';
-import { mockProducts } from '@/data/products';
+
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { selectProducts } from '@/store/selectors/productSelectors';
+import { fetchProducts } from '@/store/slices/productSlice';
+import { fetchCategories } from '@/store/slices/categorySlice';
+import { selectCategories } from '@/store/selectors/categorySelectors';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
 const ShopPage = () => {
+  const dispatch = useAppDispatch();
+
+  const products = useAppSelector(selectProducts);
+  const categories = useAppSelector(selectCategories);
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
   const [searchParams] = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedBrand, setSelectedBrand] = useState(
-    searchParams.get('brand') ?? '',
-  );
+  const [selectedBrand, setSelectedBrand] = useState(searchParams.get('brand') ?? '');
   const [maxPrice, setMaxPrice] = useState('');
-  const [sortOption, setSortOption] =
-    useState<SortOption>('default');
+  const [sortOption, setSortOption] = useState<SortOption>('default');
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     const priceLimit = maxPrice ? Number(maxPrice) : Infinity;
 
-    const filtered = mockProducts.filter((product) => {
+    const filtered = products.filter((product) => {
       const matchesSearch =
         !normalizedSearch ||
         product.name.toLowerCase().includes(normalizedSearch) ||
         product.description.toLowerCase().includes(normalizedSearch);
 
-      const matchesCategory =
-        !selectedCategory ||
-        product.categoryId === selectedCategory;
+      const matchesCategory = !selectedCategory || product.categoryId === selectedCategory;
 
-      const matchesBrand =
-        !selectedBrand ||
-        product.brandId === selectedBrand;
+      const matchesBrand = !selectedBrand || product.brandId === selectedBrand;
 
       const matchesPrice = product.price <= priceLimit;
 
@@ -60,13 +67,7 @@ const ShopPage = () => {
     }
 
     return filtered;
-  }, [
-    maxPrice,
-    searchTerm,
-    selectedBrand,
-    selectedCategory,
-    sortOption,
-  ]);
+  }, [products, searchTerm, selectedCategory, selectedBrand, maxPrice, sortOption]);
 
   const hasActiveFilters =
     Boolean(searchTerm.trim()) ||
@@ -75,15 +76,11 @@ const ShopPage = () => {
     Boolean(maxPrice) ||
     sortOption !== 'default';
 
-  const selectedCategoryName =
-    mockCategories.find(
-      (category) => category.id === selectedCategory,
-    )?.name;
+  const selectedCategoryName = categories.find(
+    (category) => category.id === selectedCategory,
+  )?.name;
 
-  const selectedBrandName =
-    mockBrands.find(
-      (brand) => brand.id === selectedBrand,
-    )?.name;
+  const selectedBrandName = mockBrands.find((brand) => brand.id === selectedBrand)?.name;
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -102,13 +99,11 @@ const ShopPage = () => {
             NOVA Store
           </p>
 
-          <h1 className="mt-2 text-4xl font-bold tracking-tight text-neutral-950">
-            Shop
-          </h1>
+          <h1 className="mt-2 text-4xl font-bold tracking-tight text-neutral-950">Shop</h1>
 
           <p className="mt-3 max-w-2xl leading-6 text-neutral-600">
-            Explore our collection of technology products and
-            find the right products for your everyday needs.
+            Explore our collection of technology products and find the right products for your
+            everyday needs.
           </p>
         </div>
       </section>
@@ -117,10 +112,7 @@ const ShopPage = () => {
       <section className="border-b border-neutral-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
           <div className="relative">
-            <label
-              htmlFor="product-search"
-              className="sr-only"
-            >
+            <label htmlFor="product-search" className="sr-only">
               Search products
             </label>
 
@@ -140,9 +132,7 @@ const ShopPage = () => {
               id="product-search"
               type="search"
               value={searchTerm}
-              onChange={(event) =>
-                setSearchTerm(event.target.value)
-              }
+              onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search products by name or description..."
               className="w-full rounded-xl border border-neutral-300 bg-neutral-50 py-3.5 pl-12 pr-12 text-sm outline-none transition focus:border-neutral-950 focus:bg-white focus:ring-4 focus:ring-neutral-950/5"
             />
@@ -167,14 +157,10 @@ const ShopPage = () => {
           <aside className="h-fit rounded-xl border border-neutral-200 bg-white p-5 lg:sticky lg:top-24">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-semibold text-neutral-950">
-                  Filters
-                </h2>
+                <h2 className="font-semibold text-neutral-950">Filters</h2>
 
                 {hasActiveFilters && (
-                  <p className="mt-1 text-xs text-neutral-500">
-                    Filters applied
-                  </p>
+                  <p className="mt-1 text-xs text-neutral-500">Filters applied</p>
                 )}
               </div>
 
@@ -201,14 +187,12 @@ const ShopPage = () => {
               <select
                 id="category-filter"
                 value={selectedCategory}
-                onChange={(event) =>
-                  setSelectedCategory(event.target.value)
-                }
+                onChange={(event) => setSelectedCategory(event.target.value)}
                 className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
               >
                 <option value="">All categories</option>
 
-                {mockCategories.map((category) => (
+                {categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
@@ -228,9 +212,7 @@ const ShopPage = () => {
               <select
                 id="brand-filter"
                 value={selectedBrand}
-                onChange={(event) =>
-                  setSelectedBrand(event.target.value)
-                }
+                onChange={(event) => setSelectedBrand(event.target.value)}
                 className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
               >
                 <option value="">All brands</option>
@@ -262,9 +244,7 @@ const ShopPage = () => {
                   type="number"
                   min="0"
                   value={maxPrice}
-                  onChange={(event) =>
-                    setMaxPrice(event.target.value)
-                  }
+                  onChange={(event) => setMaxPrice(event.target.value)}
                   placeholder="50000"
                   className="w-full rounded-lg border border-neutral-300 bg-white py-2.5 pl-8 pr-3 text-sm outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
                 />
@@ -295,12 +275,7 @@ const ShopPage = () => {
                     </span>{' '}
                     of{' '}
                     <span className="font-semibold text-neutral-950">
-                      {
-                        mockProducts.filter(
-                          (product) =>
-                            product.status === 'active',
-                        ).length
-                      }
+                      {products.filter((product) => product.status === 'active').length}
                     </span>{' '}
                     products
                   </p>
@@ -345,20 +320,12 @@ const ShopPage = () => {
                   <select
                     id="sort-products"
                     value={sortOption}
-                    onChange={(event) =>
-                      setSortOption(
-                        event.target.value as SortOption,
-                      )
-                    }
+                    onChange={(event) => setSortOption(event.target.value as SortOption)}
                     className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
                   >
                     <option value="default">Featured</option>
-                    <option value="price-asc">
-                      Price: Low to High
-                    </option>
-                    <option value="price-desc">
-                      Price: High to Low
-                    </option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
                   </select>
                 </div>
               </div>
@@ -367,10 +334,7 @@ const ShopPage = () => {
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                  />
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             ) : (
@@ -389,13 +353,11 @@ const ShopPage = () => {
                   </svg>
                 </div>
 
-                <h2 className="mt-5 text-xl font-semibold text-neutral-950">
-                  No products found
-                </h2>
+                <h2 className="mt-5 text-xl font-semibold text-neutral-950">No products found</h2>
 
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-neutral-600">
-                  Try changing your search or adjusting your
-                  filters to find what you're looking for.
+                  Try changing your search or adjusting your filters to find what you're looking
+                  for.
                 </p>
 
                 <button

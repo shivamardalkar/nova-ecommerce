@@ -1,6 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
-import { mockBrands, mockCategories } from '@/data';
+import { mockBrands } from '@/data';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { selectCategories } from '@/store/selectors/categorySelectors';
+import { fetchCategories } from '@/store/slices/categorySlice';
 import type { Product, ProductSpecification, ProductStatus } from '@/types';
 
 interface ProductFormData {
@@ -24,9 +27,7 @@ interface ProductFormProps {
   onCancel: () => void;
 }
 
-const getInitialFormData = (
-  product?: Product | null,
-): ProductFormData => ({
+const getInitialFormData = (product?: Product | null): ProductFormData => ({
   name: product?.name ?? '',
   brandId: product?.brandId ?? '',
   categoryId: product?.categoryId ?? '',
@@ -46,18 +47,18 @@ const ProductForm = ({
   onSubmit,
   onCancel,
 }: ProductFormProps) => {
-  const [formData, setFormData] = useState<ProductFormData>(
-    getInitialFormData(initialProduct),
-  );
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector(selectCategories);
 
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof ProductFormData, string>>
-  >({});
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
-  const handleChange = (
-    field: keyof ProductFormData,
-    value: string | boolean,
-  ) => {
+  const [formData, setFormData] = useState<ProductFormData>(getInitialFormData(initialProduct));
+
+  const [errors, setErrors] = useState<Partial<Record<keyof ProductFormData, string>>>({});
+
+  const handleChange = (field: keyof ProductFormData, value: string | boolean) => {
     setFormData((current) => ({
       ...current,
       [field]: value,
@@ -89,14 +90,13 @@ const ProductForm = ({
   ) => {
     setFormData((current) => ({
       ...current,
-      specifications: current.specifications.map(
-        (specification, specificationIndex) =>
-          specificationIndex === index
-            ? {
-                ...specification,
-                [field]: value,
-              }
-            : specification,
+      specifications: current.specifications.map((specification, specificationIndex) =>
+        specificationIndex === index
+          ? {
+              ...specification,
+              [field]: value,
+            }
+          : specification,
       ),
     }));
 
@@ -116,9 +116,7 @@ const ProductForm = ({
   };
 
   const validate = (): boolean => {
-    const nextErrors: Partial<
-      Record<keyof ProductFormData, string>
-    > = {};
+    const nextErrors: Partial<Record<keyof ProductFormData, string>> = {};
 
     const name = formData.name.trim();
     const description = formData.description.trim();
@@ -134,11 +132,9 @@ const ProductForm = ({
     if (!name) {
       nextErrors.name = 'Product name is required.';
     } else if (name.length < 2) {
-      nextErrors.name =
-        'Product name must be at least 2 characters.';
+      nextErrors.name = 'Product name must be at least 2 characters.';
     } else if (name.length > 120) {
-      nextErrors.name =
-        'Product name cannot exceed 120 characters.';
+      nextErrors.name = 'Product name cannot exceed 120 characters.';
     }
 
     if (!formData.brandId) {
@@ -150,55 +146,33 @@ const ProductForm = ({
     }
 
     if (!description) {
-      nextErrors.description =
-        'Product description is required.';
+      nextErrors.description = 'Product description is required.';
     }
 
-    if (
-      !formData.price ||
-      !Number.isFinite(price) ||
-      price <= 0
-    ) {
-      nextErrors.price =
-        'Enter a valid price greater than 0.';
+    if (!formData.price || !Number.isFinite(price) || price <= 0) {
+      nextErrors.price = 'Enter a valid price greater than 0.';
     }
 
-    if (
-      !formData.originalPrice ||
-      !Number.isFinite(originalPrice) ||
-      originalPrice <= 0
-    ) {
-      nextErrors.originalPrice =
-        'Enter a valid original price greater than 0.';
+    if (!formData.originalPrice || !Number.isFinite(originalPrice) || originalPrice <= 0) {
+      nextErrors.originalPrice = 'Enter a valid original price greater than 0.';
     } else if (originalPrice < price) {
-      nextErrors.originalPrice =
-        'Original price cannot be lower than the selling price.';
+      nextErrors.originalPrice = 'Original price cannot be lower than the selling price.';
     }
 
-    if (
-      !formData.stock ||
-      !Number.isInteger(stock) ||
-      stock < 0
-    ) {
-      nextErrors.stock =
-        'Stock must be a whole number greater than or equal to 0.';
+    if (!formData.stock || !Number.isInteger(stock) || stock < 0) {
+      nextErrors.stock = 'Stock must be a whole number greater than or equal to 0.';
     }
 
     if (images.length === 0) {
-      nextErrors.images =
-        'Add at least one product image URL.';
+      nextErrors.images = 'Add at least one product image URL.';
     }
 
-    const hasInvalidSpecification =
-      formData.specifications.some(
-        (specification) =>
-          !specification.key.trim() ||
-          !specification.value.trim(),
-      );
+    const hasInvalidSpecification = formData.specifications.some(
+      (specification) => !specification.key.trim() || !specification.value.trim(),
+    );
 
     if (hasInvalidSpecification) {
-      nextErrors.specifications =
-        'Complete or remove all specification rows.';
+      nextErrors.specifications = 'Complete or remove all specification rows.';
     }
 
     setErrors(nextErrors);
@@ -206,9 +180,7 @@ const ProductForm = ({
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!validate()) {
@@ -232,14 +204,10 @@ const ProductForm = ({
   const fieldClass =
     'w-full rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 disabled:bg-neutral-100 disabled:text-neutral-500';
 
-  const errorClass =
-    'mt-1.5 text-sm font-medium text-red-600';
+  const errorClass = 'mt-1.5 text-sm font-medium text-red-600';
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6"
-    >
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Information */}
       <section className="rounded-xl border border-neutral-200 bg-white shadow-sm">
         <div className="border-b border-neutral-200 px-5 py-5 sm:px-6">
@@ -273,24 +241,18 @@ const ProductForm = ({
                 id="product-name"
                 type="text"
                 value={formData.name}
-                onChange={(event) =>
-                  handleChange('name', event.target.value)
-                }
+                onChange={(event) => handleChange('name', event.target.value)}
                 placeholder="e.g. NOVA X1 Pro"
                 disabled={isSubmitting}
                 aria-invalid={Boolean(errors.name)}
                 className={`${fieldClass} ${
-                  errors.name
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10'
-                    : ''
+                  errors.name ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : ''
                 }`}
               />
 
               <div className="mt-1.5 flex justify-between gap-3">
                 {errors.name ? (
-                  <p className={errorClass}>
-                    {errors.name}
-                  </p>
+                  <p className={errorClass}>{errors.name}</p>
                 ) : (
                   <p className="text-xs text-neutral-400">
                     Use a clear, customer-friendly product name.
@@ -315,15 +277,11 @@ const ProductForm = ({
               <select
                 id="product-brand"
                 value={formData.brandId}
-                onChange={(event) =>
-                  handleChange('brandId', event.target.value)
-                }
+                onChange={(event) => handleChange('brandId', event.target.value)}
                 disabled={isSubmitting}
                 aria-invalid={Boolean(errors.brandId)}
                 className={`${fieldClass} ${
-                  errors.brandId
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10'
-                    : ''
+                  errors.brandId ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : ''
                 }`}
               >
                 <option value="">Select brand</option>
@@ -335,11 +293,7 @@ const ProductForm = ({
                 ))}
               </select>
 
-              {errors.brandId && (
-                <p className={errorClass}>
-                  {errors.brandId}
-                </p>
-              )}
+              {errors.brandId && <p className={errorClass}>{errors.brandId}</p>}
             </div>
 
             {/* Category */}
@@ -354,12 +308,7 @@ const ProductForm = ({
               <select
                 id="product-category"
                 value={formData.categoryId}
-                onChange={(event) =>
-                  handleChange(
-                    'categoryId',
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => handleChange('categoryId', event.target.value)}
                 disabled={isSubmitting}
                 aria-invalid={Boolean(errors.categoryId)}
                 className={`${fieldClass} ${
@@ -370,21 +319,14 @@ const ProductForm = ({
               >
                 <option value="">Select category</option>
 
-                {mockCategories.map((category) => (
-                  <option
-                    key={category.id}
-                    value={category.id}
-                  >
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
                 ))}
               </select>
 
-              {errors.categoryId && (
-                <p className={errorClass}>
-                  {errors.categoryId}
-                </p>
-              )}
+              {errors.categoryId && <p className={errorClass}>{errors.categoryId}</p>}
             </div>
 
             {/* Description */}
@@ -399,12 +341,7 @@ const ProductForm = ({
               <textarea
                 id="product-description"
                 value={formData.description}
-                onChange={(event) =>
-                  handleChange(
-                    'description',
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => handleChange('description', event.target.value)}
                 placeholder="Describe the product..."
                 rows={5}
                 disabled={isSubmitting}
@@ -417,13 +354,10 @@ const ProductForm = ({
               />
 
               {errors.description ? (
-                <p className={errorClass}>
-                  {errors.description}
-                </p>
+                <p className={errorClass}>{errors.description}</p>
               ) : (
                 <p className="mt-1.5 text-xs text-neutral-400">
-                  Include the key benefits and important product
-                  details.
+                  Include the key benefits and important product details.
                 </p>
               )}
             </div>
@@ -438,13 +372,9 @@ const ProductForm = ({
             Commercial
           </p>
 
-          <h3 className="mt-1 text-lg font-bold text-neutral-950">
-            Pricing & Inventory
-          </h3>
+          <h3 className="mt-1 text-lg font-bold text-neutral-950">Pricing & Inventory</h3>
 
-          <p className="mt-1.5 text-sm text-neutral-500">
-            Configure pricing and available stock.
-          </p>
+          <p className="mt-1.5 text-sm text-neutral-500">Configure pricing and available stock.</p>
         </div>
 
         <div className="p-5 sm:p-6">
@@ -464,24 +394,16 @@ const ProductForm = ({
                 min="0"
                 step="0.01"
                 value={formData.price}
-                onChange={(event) =>
-                  handleChange('price', event.target.value)
-                }
+                onChange={(event) => handleChange('price', event.target.value)}
                 placeholder="49999"
                 disabled={isSubmitting}
                 aria-invalid={Boolean(errors.price)}
                 className={`${fieldClass} ${
-                  errors.price
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10'
-                    : ''
+                  errors.price ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : ''
                 }`}
               />
 
-              {errors.price && (
-                <p className={errorClass}>
-                  {errors.price}
-                </p>
-              )}
+              {errors.price && <p className={errorClass}>{errors.price}</p>}
             </div>
 
             {/* Original Price */}
@@ -499,17 +421,10 @@ const ProductForm = ({
                 min="0"
                 step="0.01"
                 value={formData.originalPrice}
-                onChange={(event) =>
-                  handleChange(
-                    'originalPrice',
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => handleChange('originalPrice', event.target.value)}
                 placeholder="59999"
                 disabled={isSubmitting}
-                aria-invalid={Boolean(
-                  errors.originalPrice,
-                )}
+                aria-invalid={Boolean(errors.originalPrice)}
                 className={`${fieldClass} ${
                   errors.originalPrice
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10'
@@ -517,11 +432,7 @@ const ProductForm = ({
                 }`}
               />
 
-              {errors.originalPrice && (
-                <p className={errorClass}>
-                  {errors.originalPrice}
-                </p>
-              )}
+              {errors.originalPrice && <p className={errorClass}>{errors.originalPrice}</p>}
             </div>
 
             {/* Stock */}
@@ -539,24 +450,16 @@ const ProductForm = ({
                 min="0"
                 step="1"
                 value={formData.stock}
-                onChange={(event) =>
-                  handleChange('stock', event.target.value)
-                }
+                onChange={(event) => handleChange('stock', event.target.value)}
                 placeholder="50"
                 disabled={isSubmitting}
                 aria-invalid={Boolean(errors.stock)}
                 className={`${fieldClass} ${
-                  errors.stock
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10'
-                    : ''
+                  errors.stock ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : ''
                 }`}
               />
 
-              {errors.stock && (
-                <p className={errorClass}>
-                  {errors.stock}
-                </p>
-              )}
+              {errors.stock && <p className={errorClass}>{errors.stock}</p>}
             </div>
           </div>
         </div>
@@ -565,26 +468,18 @@ const ProductForm = ({
       {/* Images */}
       <section className="rounded-xl border border-neutral-200 bg-white shadow-sm">
         <div className="border-b border-neutral-200 px-5 py-5 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-400">
-            Media
-          </p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-400">Media</p>
 
-          <h3 className="mt-1 text-lg font-bold text-neutral-950">
-            Product Images
-          </h3>
+          <h3 className="mt-1 text-lg font-bold text-neutral-950">Product Images</h3>
 
-          <p className="mt-1.5 text-sm text-neutral-500">
-            Add one image URL per line.
-          </p>
+          <p className="mt-1.5 text-sm text-neutral-500">Add one image URL per line.</p>
         </div>
 
         <div className="p-5 sm:p-6">
           <textarea
             id="product-images"
             value={formData.images}
-            onChange={(event) =>
-              handleChange('images', event.target.value)
-            }
+            onChange={(event) => handleChange('images', event.target.value)}
             placeholder={
               'https://placehold.co/600x400?text=Product+Image\nhttps://placehold.co/600x400?text=Product+Back'
             }
@@ -592,20 +487,15 @@ const ProductForm = ({
             disabled={isSubmitting}
             aria-invalid={Boolean(errors.images)}
             className={`${fieldClass} resize-y font-mono text-xs ${
-              errors.images
-                ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10'
-                : ''
+              errors.images ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : ''
             }`}
           />
 
           {errors.images ? (
-            <p className={errorClass}>
-              {errors.images}
-            </p>
+            <p className={errorClass}>{errors.images}</p>
           ) : (
             <p className="mt-1.5 text-xs text-neutral-400">
-              The first URL will be used as the primary product
-              image.
+              The first URL will be used as the primary product image.
             </p>
           )}
         </div>
@@ -619,13 +509,10 @@ const ProductForm = ({
               Technical details
             </p>
 
-            <h3 className="mt-1 text-lg font-bold text-neutral-950">
-              Specifications
-            </h3>
+            <h3 className="mt-1 text-lg font-bold text-neutral-950">Specifications</h3>
 
             <p className="mt-1.5 text-sm text-neutral-500">
-              Add details such as display, storage, battery, or
-              dimensions.
+              Add details such as display, storage, battery, or dimensions.
             </p>
           </div>
 
@@ -645,7 +532,6 @@ const ProductForm = ({
             >
               <path d="M12 5v14M5 12h14" />
             </svg>
-
             Add Specification
           </button>
         </div>
@@ -666,107 +552,87 @@ const ProductForm = ({
                 </svg>
               </div>
 
-              <p className="mt-3 text-sm font-semibold text-neutral-800">
-                No specifications added
-              </p>
+              <p className="mt-3 text-sm font-semibold text-neutral-800">No specifications added</p>
 
               <p className="mt-1 text-xs text-neutral-500">
-                Add technical details to help customers understand
-                the product.
+                Add technical details to help customers understand the product.
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {formData.specifications.map(
-                (specification, index) => (
-                  <div
-                    key={`${index}-${specification.key}`}
-                    className="rounded-xl border border-neutral-200 bg-neutral-50/50 p-4"
-                  >
-                    <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-                      <div>
-                        <label
-                          htmlFor={`spec-key-${index}`}
-                          className="mb-2 block text-xs font-bold uppercase tracking-wider text-neutral-500"
-                        >
-                          Specification
-                        </label>
-
-                        <input
-                          id={`spec-key-${index}`}
-                          type="text"
-                          value={specification.key}
-                          onChange={(event) =>
-                            handleSpecificationChange(
-                              index,
-                              'key',
-                              event.target.value,
-                            )
-                          }
-                          placeholder="e.g. RAM"
-                          disabled={isSubmitting}
-                          className={fieldClass}
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor={`spec-value-${index}`}
-                          className="mb-2 block text-xs font-bold uppercase tracking-wider text-neutral-500"
-                        >
-                          Value
-                        </label>
-
-                        <input
-                          id={`spec-value-${index}`}
-                          type="text"
-                          value={specification.value}
-                          onChange={(event) =>
-                            handleSpecificationChange(
-                              index,
-                              'value',
-                              event.target.value,
-                            )
-                          }
-                          placeholder="e.g. 16 GB"
-                          disabled={isSubmitting}
-                          className={fieldClass}
-                        />
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleRemoveSpecification(index)
-                        }
-                        disabled={isSubmitting}
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-3.5 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+              {formData.specifications.map((specification, index) => (
+                <div
+                  key={`${index}-${specification.key}`}
+                  className="rounded-xl border border-neutral-200 bg-neutral-50/50 p-4"
+                >
+                  <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                    <div>
+                      <label
+                        htmlFor={`spec-key-${index}`}
+                        className="mb-2 block text-xs font-bold uppercase tracking-wider text-neutral-500"
                       >
-                        <svg
-                          aria-hidden="true"
-                          className="h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                        >
-                          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" />
-                        </svg>
+                        Specification
+                      </label>
 
-                        Remove
-                      </button>
+                      <input
+                        id={`spec-key-${index}`}
+                        type="text"
+                        value={specification.key}
+                        onChange={(event) =>
+                          handleSpecificationChange(index, 'key', event.target.value)
+                        }
+                        placeholder="e.g. RAM"
+                        disabled={isSubmitting}
+                        className={fieldClass}
+                      />
                     </div>
+
+                    <div>
+                      <label
+                        htmlFor={`spec-value-${index}`}
+                        className="mb-2 block text-xs font-bold uppercase tracking-wider text-neutral-500"
+                      >
+                        Value
+                      </label>
+
+                      <input
+                        id={`spec-value-${index}`}
+                        type="text"
+                        value={specification.value}
+                        onChange={(event) =>
+                          handleSpecificationChange(index, 'value', event.target.value)
+                        }
+                        placeholder="e.g. 16 GB"
+                        disabled={isSubmitting}
+                        className={fieldClass}
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSpecification(index)}
+                      disabled={isSubmitting}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-3.5 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      >
+                        <path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" />
+                      </svg>
+                      Remove
+                    </button>
                   </div>
-                ),
-              )}
+                </div>
+              ))}
             </div>
           )}
 
-          {errors.specifications && (
-            <p className={`${errorClass} mt-3`}>
-              {errors.specifications}
-            </p>
-          )}
+          {errors.specifications && <p className={`${errorClass} mt-3`}>{errors.specifications}</p>}
         </div>
       </section>
 
@@ -777,9 +643,7 @@ const ProductForm = ({
             Visibility
           </p>
 
-          <h3 className="mt-1 text-lg font-bold text-neutral-950">
-            Publishing
-          </h3>
+          <h3 className="mt-1 text-lg font-bold text-neutral-950">Publishing</h3>
 
           <p className="mt-1.5 text-sm text-neutral-500">
             Control product visibility and featured placement.
@@ -799,12 +663,7 @@ const ProductForm = ({
             <select
               id="product-status"
               value={formData.status}
-              onChange={(event) =>
-                handleChange(
-                  'status',
-                  event.target.value as ProductStatus,
-                )
-              }
+              onChange={(event) => handleChange('status', event.target.value as ProductStatus)}
               disabled={isSubmitting}
               className={fieldClass}
             >
@@ -822,24 +681,16 @@ const ProductForm = ({
             <input
               type="checkbox"
               checked={formData.featured}
-              onChange={(event) =>
-                handleChange(
-                  'featured',
-                  event.target.checked,
-                )
-              }
+              onChange={(event) => handleChange('featured', event.target.checked)}
               disabled={isSubmitting}
               className="mt-0.5 h-4 w-4 rounded border-neutral-300"
             />
 
             <span>
-              <span className="block text-sm font-semibold text-neutral-900">
-                Featured Product
-              </span>
+              <span className="block text-sm font-semibold text-neutral-900">Featured Product</span>
 
               <span className="mt-1 block text-xs leading-5 text-neutral-500">
-                Show this product in the featured section of the
-                storefront.
+                Show this product in the featured section of the storefront.
               </span>
             </span>
           </label>
@@ -869,11 +720,7 @@ const ProductForm = ({
             />
           )}
 
-          {isSubmitting
-            ? 'Saving...'
-            : isEditMode
-              ? 'Update Product'
-              : 'Create Product'}
+          {isSubmitting ? 'Saving...' : isEditMode ? 'Update Product' : 'Create Product'}
         </button>
       </div>
     </form>
