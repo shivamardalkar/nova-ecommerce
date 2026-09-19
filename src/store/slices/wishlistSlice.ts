@@ -1,29 +1,68 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-import type { Product, WishlistItem } from '@/types';
 import { storageService, STORAGE_KEYS } from '@/services/storage';
+import type { Product, WishlistItem } from '@/types';
 
 interface WishlistState {
     items: WishlistItem[];
+    userId: string | null;
 }
 
-const getInitialWishlist = (): WishlistItem[] => {
-    return storageService.getItem<WishlistItem[]>(
-        STORAGE_KEYS.WISHLIST,
-        [],
-    );
+const getWishlistStorageKey = (userId: string) => {
+    return `${STORAGE_KEYS.WISHLIST}_${userId}`;
 };
 
-const initialState: WishlistState = {
-    items: getInitialWishlist(),
+const getInitialWishlistState = (): WishlistState => {
+    return {
+        items: [],
+        userId: null,
+    };
+};
+
+const persistWishlist = (state: WishlistState) => {
+    if (!state.userId) {
+        return;
+    }
+
+    storageService.setItem(
+        getWishlistStorageKey(state.userId),
+        state.items,
+    );
 };
 
 const wishlistSlice = createSlice({
     name: 'wishlist',
-    initialState,
+    initialState: getInitialWishlistState(),
 
     reducers: {
+        /**
+         * Load wishlist for the currently authenticated user.
+         */
+        loadUserWishlist: (state, action: PayloadAction<string>) => {
+            const userId = action.payload;
+
+            const storedWishlist = storageService.getItem<WishlistItem[]>(
+                getWishlistStorageKey(userId),
+                [],
+            );
+
+            state.userId = userId;
+            state.items = storedWishlist;
+        },
+
+        /**
+         * Clear the Redux wishlist when the user logs out.
+         */
+        clearUserWishlist: (state) => {
+            state.userId = null;
+            state.items = [];
+        },
+
         addToWishlist: (state, action: PayloadAction<Product>) => {
+            if (!state.userId) {
+                return;
+            }
+
             const product = action.payload;
 
             const alreadyExists = state.items.some(
@@ -39,47 +78,49 @@ const wishlistSlice = createSlice({
                 addedAt: new Date().toISOString(),
             });
 
-            storageService.setItem(
-                STORAGE_KEYS.WISHLIST,
-                state.items,
-            );
+            persistWishlist(state);
         },
 
         removeFromWishlist: (state, action: PayloadAction<string>) => {
+            if (!state.userId) {
+                return;
+            }
+
             state.items = state.items.filter(
                 (item) => item.product.id !== action.payload,
             );
 
-            storageService.setItem(
-                STORAGE_KEYS.WISHLIST,
-                state.items,
-            );
+            persistWishlist(state);
         },
 
         clearWishlist: (state) => {
+            if (!state.userId) {
+                return;
+            }
+
             state.items = [];
 
-            storageService.setItem(
-                STORAGE_KEYS.WISHLIST,
-                state.items,
-            );
+            persistWishlist(state);
         },
 
         setWishlistItems: (
             state,
             action: PayloadAction<WishlistItem[]>,
         ) => {
+            if (!state.userId) {
+                return;
+            }
+
             state.items = action.payload;
 
-            storageService.setItem(
-                STORAGE_KEYS.WISHLIST,
-                state.items,
-            );
+            persistWishlist(state);
         },
     },
 });
 
 export const {
+    loadUserWishlist,
+    clearUserWishlist,
     addToWishlist,
     removeFromWishlist,
     clearWishlist,
