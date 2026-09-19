@@ -23,6 +23,7 @@ import AdminCategoriesPage from '@/pages/admin/AdminCategoriesPage';
 import AdminProductsPage from '@/pages/admin/AdminProductsPage';
 import AdminProductCreatePage from '@/pages/admin/AdminProductCreatePage';
 import AdminProductEditPage from '@/pages/admin/AdminProductEditPage';
+import AdminOrdersPage from '@/pages/admin/AdminOrdersPage';
 
 const PlaceholderPage = ({ title }: { title: string }) => {
   return (
@@ -81,7 +82,7 @@ const AppRoutes = () => {
 
             <Route path="/admin/products/:id/edit" element={<AdminProductEditPage />} />
 
-            <Route path="/admin/orders" element={<PlaceholderPage title="Admin Orders" />} />
+            <Route path="/admin/orders" element={<AdminOrdersPage />} />
           </Route>
         </Route>
 

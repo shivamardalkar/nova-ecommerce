@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 import type { Order } from '@/types';
+import { mockOrders } from '@/data';
 import { storageService, STORAGE_KEYS } from '@/services/storage';
 
 interface OrderState {
@@ -9,10 +10,18 @@ interface OrderState {
 }
 
 const getInitialOrders = (): Order[] => {
-    return storageService.getItem<Order[]>(
+    const storedOrders = storageService.getItem<Order[] | null>(
         STORAGE_KEYS.ORDERS,
-        [],
+        null,
     );
+
+    if (storedOrders !== null) {
+        return storedOrders;
+    }
+
+    storageService.setItem(STORAGE_KEYS.ORDERS, mockOrders);
+
+    return mockOrders;
 };
 
 const initialState: OrderState = {
