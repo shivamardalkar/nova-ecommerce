@@ -17,6 +17,14 @@ import OrderDetailsPage from '@/pages/customer/OrderDetailsPage';
 import AdminRoute from './AdminRoute';
 import ProtectedRoute from './ProtectedRoute';
 
+import AdminLayout from '@/layouts/admin/AdminLayout';
+import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
+import AdminCategoriesPage from '@/pages/admin/AdminCategoriesPage';
+import AdminProductsPage from '@/pages/admin/AdminProductsPage';
+import AdminProductCreatePage from '@/pages/admin/AdminProductCreatePage';
+import AdminProductEditPage from '@/pages/admin/AdminProductEditPage';
+import AdminOrdersPage from '@/pages/admin/AdminOrdersPage';
+
 const PlaceholderPage = ({ title }: { title: string }) => {
   return (
     <main className="flex min-h-screen items-center justify-center">
@@ -63,20 +71,19 @@ const AppRoutes = () => {
 
         {/* Protected admin routes */}
         <Route element={<AdminRoute />}>
-          <Route path="/admin" element={<PlaceholderPage title="Admin Dashboard" />} />
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminDashboardPage />} />
 
-          <Route path="/admin/categories" element={<PlaceholderPage title="Admin Categories" />} />
+            <Route path="/admin/categories" element={<AdminCategoriesPage />} />
 
-          <Route path="/admin/products" element={<PlaceholderPage title="Admin Products" />} />
+            <Route path="/admin/products" element={<AdminProductsPage />} />
 
-          <Route path="/admin/products/new" element={<PlaceholderPage title="Add Product" />} />
+            <Route path="/admin/products/new" element={<AdminProductCreatePage />} />
 
-          <Route
-            path="/admin/products/:id/edit"
-            element={<PlaceholderPage title="Edit Product" />}
-          />
+            <Route path="/admin/products/:id/edit" element={<AdminProductEditPage />} />
 
-          <Route path="/admin/orders" element={<PlaceholderPage title="Admin Orders" />} />
+            <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          </Route>
         </Route>
 
         {/* Other routes */}

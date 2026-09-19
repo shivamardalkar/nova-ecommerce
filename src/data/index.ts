@@ -4,3 +4,4 @@ export { mockCategories } from './categories';
 export { mockProducts } from './products';
 export { mockCoupons } from './coupons';
 export { mockFAQs } from './faqs';
+export { mockOrders } from './orders';
