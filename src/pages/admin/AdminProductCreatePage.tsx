@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AlertCircle, ArrowLeft, PackagePlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import ProductForm from '@/components/admin/ProductForm';
@@ -7,7 +8,7 @@ import { useAppDispatch } from '@/store/hooks';
 import { fetchProducts } from '@/store/slices/productSlice';
 import type { Product, ProductSpecification } from '@/types';
 
-type ProductFormData = {
+interface ProductFormData {
   name: string;
   brandId: string;
   categoryId: string;
@@ -19,116 +20,157 @@ type ProductFormData = {
   specifications: ProductSpecification[];
   status: Product['status'];
   featured: boolean;
-};
+}
 
 const AdminProductCreatePage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
+  const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleCreateProduct = async (data: ProductFormData) => {
+  const handleCreateProduct = async (formData: ProductFormData) => {
+    setError('');
     setIsSubmitting(true);
-    setError(null);
 
     try {
-      const productsResponse = await mockApi.getProducts();
+      const existingProductsResponse = await mockApi.getProducts();
 
-      if (!productsResponse.success) {
-        throw new Error(productsResponse.message ?? 'Unable to validate product.');
-      }
+      const normalizedName = formData.name.trim().toLowerCase();
 
-      const normalizedName = data.name.trim().toLowerCase();
-
-      const productAlreadyExists = productsResponse.data.some(
+      const duplicateProduct = existingProductsResponse.data.find(
         (product) => product.name.trim().toLowerCase() === normalizedName,
       );
 
-      if (productAlreadyExists) {
-        throw new Error('A product with this name already exists.');
+      if (duplicateProduct) {
+        setError('A product with this name already exists.');
+        return;
       }
 
-      const price = Number(data.price);
-      const originalPrice = Number(data.originalPrice);
+      const price = Number(formData.price);
+      const originalPrice = Number(formData.originalPrice);
+      const stock = Number(formData.stock);
 
       const discountPercentage =
-        originalPrice > 0 ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+        originalPrice > price
+          ? Math.round(((originalPrice - price) / originalPrice) * 100)
+          : 0;
+
+      const images = formData.images
+        .split('\n')
+        .map((image) => image.trim())
+        .filter(Boolean);
+
+      const specifications = formData.specifications.filter(
+        (specification) =>
+          specification.key.trim() !== '' &&
+          specification.value.trim() !== '',
+      );
 
       const now = new Date().toISOString();
 
       const newProduct: Product = {
         id: `product-${Date.now()}`,
-        name: data.name,
-        brandId: data.brandId,
-        categoryId: data.categoryId,
-        description: data.description,
+        name: formData.name.trim(),
+        brandId: formData.brandId,
+        categoryId: formData.categoryId,
+        description: formData.description.trim(),
         price,
         originalPrice,
         discountPercentage,
-        stock: Number(data.stock),
-        images: data.images
-          .split('\n')
-          .map((image) => image.trim())
-          .filter(Boolean),
-        specifications: data.specifications,
+        stock,
+        images,
+        specifications,
         reviews: [],
         rating: 0,
-        status: data.status,
-        featured: data.featured,
+        status: formData.status,
+        featured: formData.featured,
         createdAt: now,
         updatedAt: now,
       };
 
-      const response = await mockApi.createProduct(newProduct);
-
-      if (!response.success) {
-        throw new Error(response.message ?? 'Unable to create product.');
-      }
+      await mockApi.createProduct(newProduct);
 
       await dispatch(fetchProducts()).unwrap();
 
       navigate('/admin/products', {
         replace: true,
         state: {
-          successMessage: response.message ?? 'Product created successfully.',
+          successMessage: 'Product created successfully.',
         },
       });
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unable to create product.');
+    } catch (createError) {
+      console.error('Failed to create product:', createError);
+      setError('Unable to create the product. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleCancel = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    navigate('/admin/products');
+  };
+
   return (
     <div className="space-y-8">
-      <div>
+      {/* Page Header */}
+      <section className="space-y-5">
         <button
           type="button"
-          onClick={() => navigate('/admin/products')}
-          className="mb-4 text-sm font-semibold text-neutral-600 hover:text-neutral-900"
+          onClick={handleCancel}
+          disabled={isSubmitting}
+          className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3.5 py-2 text-sm font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          ← Back to Products
+          <ArrowLeft className="h-4 w-4" />
+          Back to Products
         </button>
 
-        <p className="text-sm font-medium text-neutral-500">Catalog</p>
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-neutral-950 text-white shadow-sm">
+            <PackagePlus className="h-6 w-6" />
+          </div>
 
-        <h1 className="mt-1 text-3xl font-bold text-neutral-900">Add Product</h1>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              Catalog
+            </p>
 
-        <p className="mt-2 text-neutral-600">Create a new product for your store catalog.</p>
-      </div>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-neutral-950 sm:text-3xl">
+              Add Product
+            </h1>
 
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
+              Create a new product and configure its pricing, inventory,
+              images, specifications, and publishing settings.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Error */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {error}
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-800"
+        >
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+
+          <div>
+            <p className="font-semibold">Unable to create product</p>
+            <p className="mt-0.5 text-red-700">{error}</p>
+          </div>
         </div>
       )}
 
+      {/* Product Form */}
       <ProductForm
-        isSubmitting={isSubmitting}
         onSubmit={handleCreateProduct}
-        onCancel={() => navigate('/admin/products')}
+        onCancel={handleCancel}
+        isSubmitting={isSubmitting}
       />
     </div>
   );
