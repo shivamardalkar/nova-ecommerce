@@ -6,34 +6,69 @@ import type { CartItem, Product } from '@/types';
 interface CartState {
     items: CartItem[];
     appliedCouponCode: string | null;
+    userId: string | null;
 }
 
-const getInitialCartState = (): CartState => {
-    const storedCart = storageService.getItem<CartState | null>(
-        STORAGE_KEYS.CART,
-        null,
-    );
+interface StoredCart {
+    items: CartItem[];
+    appliedCouponCode: string | null;
+}
 
+const getCartStorageKey = (userId: string) => {
+    return `${STORAGE_KEYS.CART}_${userId}`;
+};
+
+const getInitialCartState = (): CartState => {
     return {
-        items: storedCart?.items ?? [],
-        appliedCouponCode: storedCart?.appliedCouponCode ?? null,
+        items: [],
+        appliedCouponCode: null,
+        userId: null,
     };
 };
 
 const persistCart = (state: CartState) => {
-    storageService.setItem(STORAGE_KEYS.CART, {
+    if (!state.userId) {
+        return;
+    }
+
+    const storedCart: StoredCart = {
         items: state.items,
         appliedCouponCode: state.appliedCouponCode,
-    });
-};
+    };
 
-const initialState: CartState = getInitialCartState();
+    storageService.setItem(getCartStorageKey(state.userId), storedCart);
+};
 
 const cartSlice = createSlice({
     name: 'cart',
-    initialState,
+    initialState: getInitialCartState(),
 
     reducers: {
+        /**
+         * Load cart for the currently authenticated user.
+         */
+        loadUserCart: (state, action: PayloadAction<string>) => {
+            const userId = action.payload;
+
+            const storedCart = storageService.getItem<StoredCart | null>(
+                getCartStorageKey(userId),
+                null,
+            );
+
+            state.userId = userId;
+            state.items = storedCart?.items ?? [];
+            state.appliedCouponCode = storedCart?.appliedCouponCode ?? null;
+        },
+
+        /**
+         * Clear the Redux cart when the user logs out.
+         */
+        clearUserCart: (state) => {
+            state.userId = null;
+            state.items = [];
+            state.appliedCouponCode = null;
+        },
+
         addToCart: (
             state,
             action: PayloadAction<{
@@ -42,6 +77,10 @@ const cartSlice = createSlice({
             }>,
         ) => {
             const { product, quantity = 1 } = action.payload;
+
+            if (!state.userId) {
+                return;
+            }
 
             const existingItem = state.items.find(
                 (item) => item.product.id === product.id,
@@ -63,6 +102,10 @@ const cartSlice = createSlice({
         },
 
         removeFromCart: (state, action: PayloadAction<string>) => {
+            if (!state.userId) {
+                return;
+            }
+
             state.items = state.items.filter(
                 (item) => item.product.id !== action.payload,
             );
@@ -71,6 +114,10 @@ const cartSlice = createSlice({
         },
 
         increaseQuantity: (state, action: PayloadAction<string>) => {
+            if (!state.userId) {
+                return;
+            }
+
             const item = state.items.find(
                 (cartItem) => cartItem.product.id === action.payload,
             );
@@ -83,6 +130,10 @@ const cartSlice = createSlice({
         },
 
         decreaseQuantity: (state, action: PayloadAction<string>) => {
+            if (!state.userId) {
+                return;
+            }
+
             const item = state.items.find(
                 (cartItem) => cartItem.product.id === action.payload,
             );
@@ -99,6 +150,10 @@ const cartSlice = createSlice({
         },
 
         clearCart: (state) => {
+            if (!state.userId) {
+                return;
+            }
+
             state.items = [];
             state.appliedCouponCode = null;
 
@@ -106,18 +161,30 @@ const cartSlice = createSlice({
         },
 
         applyCoupon: (state, action: PayloadAction<string>) => {
+            if (!state.userId) {
+                return;
+            }
+
             state.appliedCouponCode = action.payload.trim().toUpperCase();
 
             persistCart(state);
         },
 
         removeCoupon: (state) => {
+            if (!state.userId) {
+                return;
+            }
+
             state.appliedCouponCode = null;
 
             persistCart(state);
         },
 
         setCartItems: (state, action: PayloadAction<CartItem[]>) => {
+            if (!state.userId) {
+                return;
+            }
+
             state.items = action.payload;
 
             persistCart(state);
@@ -126,9 +193,11 @@ const cartSlice = createSlice({
 });
 
 export const {
+    loadUserCart,
+    clearUserCart,
     addToCart,
     removeFromCart,
-    increaseQuantity,
+    increaseQuantity,   
     decreaseQuantity,
     clearCart,
     applyCoupon,

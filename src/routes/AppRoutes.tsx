@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import ScrollToTop from '@/components/common/ScrollToTop';
 
 import AdminLoginPage from '@/pages/auth/AdminLoginPage';
 import LoginPage from '@/pages/auth/LoginPage';
@@ -39,6 +40,7 @@ const PlaceholderPage = ({ title }: { title: string }) => {
 const AppRoutes = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* Storefront routes */}
         <Route element={<StorefrontLayout />}>
